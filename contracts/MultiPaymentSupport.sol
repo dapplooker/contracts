@@ -1,46 +1,57 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+contract VaultTesting {
+	address tokenAddress;
+	address owner;
 
-contract MultiTokenPaymentGateway is Initializable {
-	using SafeERC20Upgradeable for IERC20Upgradeable;
-	address payable owner;
-	mapping(address => uint) balances;
-	mapping(IERC20Upgradeable => uint) tokens;
-
-
-	function initialize() public initializer {
-		owner = payable(msg.sender);
-		// for (uint i = 0; i < _tokens.length; i++) {
-		//	tokens[address(_tokens[i])] = _tokens[i];
-		// }
+	constructor() {
+		owner = msg.sender;
 	}
 
-	function depositFunds(IERC20Upgradeable tokenToLock, uint256 amount) public {
-		// uint256 amount = msg.value;
-		// uint256 tokenAmount = IERC20Upgradeable(tokenToLock).balanceOf(address(msg.sender));
-		// require(tokenAmount >= amount, "Balance for wallet is low!!!");
-		// IERC20Upgradeable tokenAddress = IERC20Upgradeable(tokenToLock);
-		// tokenToLock.safeIncreaseAllowance(address(this), amount);
-		tokenToLock.safeTransfer(address(this), amount);
-		// ERC20Utils.tokenTransferFrom(tokenToLock, msg.sender, address(this), amount);
-		// require(!success, "Transfer failed");
-		balances[msg.sender] += amount;
+	// userAddress => tokenAddress => token amount
+	mapping (address => uint256) tokenBalance;
+
+	event tokenDepositCompleted(address tokenAddress, uint256 amount);
+	event tokenApprovedCompleted(address tokenAddress, uint256 amount);
+
+	function approveToken(address tokenAdd, uint256 amount) public {
+		ERC20 tokenDetail = ERC20(tokenAdd);
+		require(tokenDetail.balanceOf(msg.sender) >= amount, "Your token amount must be greater then you are trying to deposit");
+		require(tokenDetail.approve(address(this), amount));
+
+		emit tokenApprovedCompleted(tokenAdd, amount);
 	}
 
-	function returnBalance(IERC20Upgradeable token, address walletAddress) public view returns (uint256) {
-		uint256 tokenAmount = token.balanceOf(address(walletAddress));
-		return tokenAmount;
+	function depositToken(address tokenAdd, uint256 amount) public {
+		ERC20 tokenDetail = ERC20(tokenAdd);
+		require(tokenDetail.balanceOf(msg.sender) >= amount, "Your token amount must be greater then you are trying to deposit");
+		require(tokenDetail.transferFrom(msg.sender, address(this), amount));
+
+//		tokenBalance[tokenAdd] += amount;
+		emit tokenDepositCompleted(tokenAdd, amount);
 	}
 
-	function withdrawFunds(IERC20Upgradeable tokenToLock, uint256 amount) public {
-		require(msg.sender == owner, "Only owner can withdraw funds");
-		require(amount > 0, "Withdraw amount must be greater than 0");
-		require(tokenToLock.balanceOf(address(this)) >= amount, "Insufficient funds");
-		tokenToLock.safeTransfer(msg.sender, amount);
-		// owner.transfer(amount);
+	event tokenWithdrawalComplete(address tokenAddress, uint256 amount);
+
+	function withDrawAll() public {
+		require(tokenBalance[tokenAddress] > 0, "User doesnt has funds on this vault");
+		uint256 amount = tokenBalance[tokenAddress];
+		ERC20 tokenDetail = ERC20(tokenAddress);
+		require(tokenDetail.transfer(msg.sender, amount), "the transfer failed");
+		tokenBalance[tokenAddress] = 0;
+		emit tokenWithdrawalComplete(tokenAddress, amount);
 	}
+
+	function withDrawAmount(uint256 amount) public {
+		require(tokenBalance[tokenAddress] >= amount);
+		ERC20 tokenDetail = ERC20(tokenAddress);
+		require(tokenDetail.transfer(msg.sender, amount), "the transfer failed");
+		tokenBalance[tokenAddress] -= amount;
+		emit tokenWithdrawalComplete(tokenAddress, amount);
+	}
+
 }
