@@ -1,7 +1,7 @@
 const proxyHardhatObj = require("hardhat")
 
 async function deployProxyContract() {
-  const multiTokenPaymentGateway = await proxyHardhatObj.ethers.getContractFactory("MultiTokenPaymentGateway");
+  const multiTokenPaymentGateway = await proxyHardhatObj.ethers.getContractFactory("PaymentVault");
   const multiTokenPaymentGatewayDeploy = await proxyHardhatObj.upgrades.deployProxy(multiTokenPaymentGateway);
   await multiTokenPaymentGatewayDeploy.deployed();
 
