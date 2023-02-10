@@ -1,15 +1,14 @@
-const hre = require("hardhat")
-const { ethers, upgrades } = require('hardhat');
+const proxyHardhatObj = require("hardhat")
 
-async function main() {
-  const multiTokenPaymentGateway = await hre.ethers.getContractFactory("MultiTokenPaymentGateway");
-  const multiTokenPaymentGatewayDeploy = await upgrades.deployProxy(multiTokenPaymentGateway);
+async function deployProxyContract() {
+  const multiTokenPaymentGateway = await proxyHardhatObj.ethers.getContractFactory("MultiTokenPaymentGateway");
+  const multiTokenPaymentGatewayDeploy = await proxyHardhatObj.upgrades.deployProxy(multiTokenPaymentGateway);
   await multiTokenPaymentGatewayDeploy.deployed();
 
   console.log(`Contract successfully deployed to ${multiTokenPaymentGatewayDeploy.address}`);
 }
 
-main().catch((error) => {
+deployProxyContract().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
