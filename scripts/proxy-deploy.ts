@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const proxyHardhatObj = require("hardhat")
 
 async function deployProxyContract() {

@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
@@ -11,11 +13,11 @@ const config: HardhatUserConfig = {
       },
       polygon_mumbai: {
         url: "https://matic-mumbai.chainstacklabs.com/",
-        accounts: ["xxx"]
+        accounts: [process.env.DEPLOYER_PRIVATE_KEY!]
       }
     },
     etherscan: {
-      apiKey: "xxx"
+      apiKey: process.env.POLYGONSCAN_API_KEY!
     },
     solidity: {
       version: "0.8.17",

@@ -3,6 +3,7 @@ import {contractABI} from './config/PaymentABI';
 import {erc20TokenContractAbi} from './config/ERC20ABI';
 import Constant from './config/Constant';
 
+require('dotenv').config()
 
 function sleep(ms: any) {
     console.log(`Sleeping for ${ms} ms.`);
@@ -18,7 +19,7 @@ class PaymentWrapper {
     private web3: any;
 
     constructor() {
-        this.web3 = new Web3(Constant.rpcURL);
+        this.web3 = new Web3(Constant.rpcMumbaiURL);
         this.web3.eth.accounts.wallet.add(Constant.userPrivateKey);
         this.paymentInstance = new this.web3.eth.Contract(contractABI.abi as any, Constant.paymentContract);
     }
@@ -90,15 +91,15 @@ class PaymentWrapper {
 
 async function doTransactions() {
     const paymentVault = new PaymentWrapper();
-    await paymentVault.approveFunds(Constant.chainLinkTokenAddress, BigInt(2000000000000000000)).then(() =>
+    await paymentVault.approveFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
         console.log(`Approve transaction successful. Approved funds to ${Constant.paymentContract}`)
     );
     await sleep(1000);
-    await paymentVault.depositFunds(Constant.chainLinkTokenAddress, BigInt(2000000000000000000)).then(() =>
+    await paymentVault.depositFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
         console.log(`Deposit transaction successful. Deposited funds to ${Constant.paymentContract}`)
     );
     await sleep(1000);
-    await paymentVault.withdrawFunds(Constant.chainLinkTokenAddress, BigInt(2000000000000000000)).then(() =>
+    await paymentVault.withdrawFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
         console.log(`Withdraw transaction successful. Withdrawn funds to ${Constant.ownerWalletAddress}`)
     );
 }
