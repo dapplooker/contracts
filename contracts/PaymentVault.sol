@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract PaymentVault is Initializable {
 	using SafeERC20Upgradeable for IERC20Upgradeable;
-	address payable owner;
+	address owner;
 
 	event DepositCompleted(address sender, uint256 amount);
 	event withdrawCompleted(address tokenWithdraw, address sentTo, uint256 amount);
