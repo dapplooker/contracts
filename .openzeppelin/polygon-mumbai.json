@@ -1,0 +1,112 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x69A9e9FCDDE5d63d21C2e0F58188EEa4c3d452df",
+    "txHash": "0x9a2b100bea91c406c7897d4b5e674855c13ec25084b4dd6fe676aadb50d6ac0e"
+  },
+  "proxies": [
+    {
+      "address": "0x69A9D7668966F5d9A939833d7697ed9C90BbB020",
+      "txHash": "0xd8ed884742623a216e5ca60a1853fcfb2c693bf76e71470982d4d947b6fea40e",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "97e6d788d4ce12d5fd43df8b3285ee7d16d9f0c03ae935ad892e3f958496c7db": {
+      "address": "0x9C5b8d8ec057B4a7A1CcCDaF0524d5C4F0237387",
+      "txHash": "0xa1864709e239b14553e308d1c54df0f8a26e3f06e82c0e6cb4e777dd4af997c2",
+      "layout": {
+        "solcVersion": "0.8.17",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "owner",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "PaymentVault",
+            "src": "contracts/PaymentVault.sol:20"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "bd3f0feef920afef139a3d20943f6d514d5a9741e4d3373bba13c90573c566d6": {
+      "address": "0x1Bf49bae08D5b91F76A26d3fC64B52dB97d968b3",
+      "txHash": "0xbe344973ce3b9b483af914999859b2a3020814ab2a6511ea040b30ca0097f728",
+      "layout": {
+        "solcVersion": "0.8.17",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "owner",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "PaymentVault",
+            "src": "contracts/PaymentVault.sol:20"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

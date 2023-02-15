@@ -26,7 +26,7 @@ class Constant {
     }
 
     get receiverPrivateKey(): string {
-        return process.env.USER_PRIVATE_KEY!;
+        return process.env.RECEIVER_PRIVATE_KEY!;
     }
 
     get ownerWalletAddress(): string {

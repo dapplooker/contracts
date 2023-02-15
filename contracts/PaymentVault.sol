@@ -5,15 +5,26 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 
+/**
+ * @notice Payment gateway which will be used to transfer token from wallet to
+ * 		   contract and from contract to owner.
+ *
+ * @dev PaymentVault.deposit() function will deposit the amount of approved token
+ *		to the PaymentVault contract, which later can be withdrawn using
+ *		PaymentVault.withdraw() function to owners wallet.
+ */
 contract PaymentVault is Initializable {
 	using SafeERC20Upgradeable for IERC20Upgradeable;
+
+	/** Contains the address of owner. */
 	address owner;
 
+	/** Events which will be emitted on operation completes. */
 	event DepositCompleted(address sender, uint256 amount);
 	event withdrawCompleted(address tokenWithdraw, address sentTo, uint256 amount);
 
 	function initialize() public initializer {
-		owner = payable(msg.sender);
+		owner = msg.sender;
 	}
 
 	/**
@@ -26,7 +37,7 @@ contract PaymentVault is Initializable {
 		uint256 amount
 	) public {
 		uint256 tokenBalanceSender = token.balanceOf(address(msg.sender));
-		require(tokenBalanceSender >= amount, "Balance for wallet is low!!!");
+		require(tokenBalanceSender >= amount, "Your wallet balance for token is low");
 		token.safeTransferFrom(msg.sender, address(this), amount);
 
 		emit DepositCompleted(msg.sender, amount);
