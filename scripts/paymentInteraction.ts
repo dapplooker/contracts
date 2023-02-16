@@ -133,31 +133,13 @@ async function doTransactions(networkName: string, tokenName: string) {
     );
 }
 
-// doTransactions().then(r => console.log("Done"));
-
-
 function executeContracts(args: string[]) {
-
     let networkName = args[0];
     let tokenName = args[1];
-    console.log(JSON.stringify(args));
+    console.log(`Arguments passed: ${JSON.stringify(args)}`);
 
     doTransactions(networkName, tokenName).then(r => console.log("Done"));
 
-
-    // if (args.length !== 0) {
-    //     for (let i = 0; i < args.length; i++) {
-    //         planNames.push(args[i].trim());
-    //     }
-    // } else {
-    //     planNames = Object.keys(PlansConfig);
-    // }
-    //
-    // Logger.debug(`PopulatePlans :: Updating pricing plans :: Plans: ${planNames}`);
-    //
-    // const PopulatePlans = new PopulatePricingPlans({ planNames });
-    //
-    // PopulatePlans.perform().then(() => console.log('DONE'));
 }
 
 executeContracts(args)
