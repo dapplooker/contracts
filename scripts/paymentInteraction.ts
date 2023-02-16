@@ -2,8 +2,11 @@ import Web3 from 'web3';
 import {contractABI} from './config/PaymentABI';
 import {erc20TokenContractAbi} from './config/ERC20ABI';
 import Constant from './config/Constant';
+import upgradeHardhatObj from "hardhat";
 
 require('dotenv').config()
+
+const args = process.argv.slice(2);
 
 function sleep(ms: any) {
     console.log(`Sleeping for ${ms} ms.`);
@@ -18,31 +21,57 @@ class PaymentWrapper {
 
     private web3: any;
 
-    constructor() {
-        this.web3 = new Web3(Constant.rpcMumbaiURL);
-        this.web3.eth.accounts.wallet.add(Constant.userPrivateKey);
-        this.paymentInstance = new this.web3.eth.Contract(contractABI.abi as any, Constant.paymentContract);
+    private tokenContractAddress: string;
+
+    private networkRPCURL: string;
+
+    private paymentContract: string;
+
+    private userWalletAddress: string;
+
+    private userPrivateKey: string;
+
+    private deployerWalletAddress: string;
+
+    private deployerPrivateKey: string;
+
+
+    constructor(networkName: string, tokenName: string) {
+        this.tokenContractAddress = Constant.contractAddress[networkName][tokenName];
+        this.networkRPCURL = Constant.contractAddress[networkName]["rpcURL"];
+        this.paymentContract = Constant.contractAddress[networkName]["paymentVault"];
+        this.userWalletAddress = Constant.contractAddress[networkName]["userAddress"];
+        this.userPrivateKey = Constant.contractAddress[networkName]["userPrivateKey"];
+        this.deployerWalletAddress = Constant.contractAddress[networkName]["deployerAddress"];
+        this.deployerPrivateKey = Constant.contractAddress[networkName]["deployerPrivateKey"];
+
+        this.web3 = new Web3(this.networkRPCURL);
+        this.web3.eth.accounts.wallet.add(this.userPrivateKey);
+        this.paymentInstance = new this.web3.eth.Contract(contractABI.abi as any, this.paymentContract);
     }
 
-    public async approveFunds(tokenAddress: string, amount: bigint) {
+    public async approveFunds(amount: bigint) {
+        const oThis = this;
         console.log("\n ======================= Starting approve funds transaction =======================");
-        let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, Constant.chainLinkTokenAddress);
-        let approveTransaction = tokenInstance.methods.approve(Constant.paymentContract, amount).encodeABI();
-        const txHash = await this.sendTransaction(approveTransaction, Constant.userPrivateKey, Constant.chainLinkTokenAddress, "APPROVE");
+        let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
+        let approveTransaction = tokenInstance.methods.approve(oThis.paymentContract, amount).encodeABI();
+        const txHash = await this.sendTransaction(approveTransaction, oThis.userPrivateKey, oThis.tokenContractAddress, "APPROVE");
         await this.waitForTransactionStatus(txHash, "APPROVE");
     }
 
-    public async depositFunds(tokenAddress: string, amount: bigint) {
+    public async depositFunds(amount: bigint) {
+        const oThis = this;
         console.log("\n ======================= Starting deposit funds transaction =======================");
-        let depositCallEncoded = this.paymentInstance.methods.depositFunds(tokenAddress, amount).encodeABI();
-        const txHash = await this.sendTransaction(depositCallEncoded, Constant.userPrivateKey, Constant.paymentContract, "DEPOSIT");
+        let depositCallEncoded = this.paymentInstance.methods.deposit(oThis.tokenContractAddress, amount).encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, oThis.userPrivateKey, oThis.paymentContract, "DEPOSIT");
         await this.waitForTransactionStatus(txHash, "DEPOSIT");
     }
 
-    public async withdrawFunds(tokenAddress: string, amount: bigint) {
+    public async withdrawFunds(amount: bigint) {
+        const oThis = this;
         console.log("\n ======================= Starting withdraw funds transaction =======================");
-        let depositCallEncoded = this.paymentInstance.methods.withdrawFunds(tokenAddress, amount).encodeABI();
-        const txHash = await this.sendTransaction(depositCallEncoded, Constant.receiverPrivateKey, Constant.paymentContract, "WITHDRAW");
+        let depositCallEncoded = this.paymentInstance.methods.withdraw(oThis.tokenContractAddress, amount).encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "WITHDRAW");
         await this.waitForTransactionStatus(txHash, "WITHDRAW");
     }
 
@@ -89,19 +118,46 @@ class PaymentWrapper {
     }
 }
 
-async function doTransactions() {
-    const paymentVault = new PaymentWrapper();
-    await paymentVault.approveFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
-        console.log(`Approve transaction successful. Approved funds to ${Constant.paymentContract}`)
+async function doTransactions(networkName: string, tokenName: string) {
+    const paymentVault = new PaymentWrapper(networkName, tokenName);
+    await paymentVault.approveFunds(Constant.transferAmountInGWEI).then(() =>
+        console.log(`Approve transaction successful. Approved funds to ${Constant.contractAddress[networkName][tokenName]}`)
     );
     await sleep(1000);
-    await paymentVault.depositFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
-        console.log(`Deposit transaction successful. Deposited funds to ${Constant.paymentContract}`)
+    await paymentVault.depositFunds(Constant.transferAmountInGWEI).then(() =>
+        console.log(`Deposit transaction successful. Deposited funds to ${Constant.contractAddress[networkName][tokenName]}`)
     );
     await sleep(1000);
-    await paymentVault.withdrawFunds(Constant.chainLinkTokenAddress, Constant.transferAmountInGWEI).then(() =>
-        console.log(`Withdraw transaction successful. Withdrawn funds to ${Constant.ownerWalletAddress}`)
+    await paymentVault.withdrawFunds(Constant.transferAmountInGWEI).then(() =>
+        console.log(`Withdraw transaction successful. Withdrawn funds to ${Constant.contractAddress[networkName]["deployerAddress"]}`)
     );
 }
 
-doTransactions().then(r => console.log("Done"));
+// doTransactions().then(r => console.log("Done"));
+
+
+function executeContracts(args: string[]) {
+
+    let networkName = args[0];
+    let tokenName = args[1];
+    console.log(JSON.stringify(args));
+
+    doTransactions(networkName, tokenName).then(r => console.log("Done"));
+
+
+    // if (args.length !== 0) {
+    //     for (let i = 0; i < args.length; i++) {
+    //         planNames.push(args[i].trim());
+    //     }
+    // } else {
+    //     planNames = Object.keys(PlansConfig);
+    // }
+    //
+    // Logger.debug(`PopulatePlans :: Updating pricing plans :: Plans: ${planNames}`);
+    //
+    // const PopulatePlans = new PopulatePricingPlans({ planNames });
+    //
+    // PopulatePlans.perform().then(() => console.log('DONE'));
+}
+
+executeContracts(args)

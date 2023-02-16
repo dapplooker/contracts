@@ -13,8 +13,8 @@ const config = {
             url: "https://matic-mumbai.chainstacklabs.com/",
             accounts: [process.env.MUMBAI_DEPLOYER_PRIVATE_KEY!]
         },
-        goreli: {
-            url: "",
+        goerli: {
+            url: "https://goerli.infura.io/v3/ff5bdb3ffa2b490ebf5bd48d179b5bbe",
             accounts: [process.env.GORELI_DEPLOYER_PRIVATE_KEY!]
         },
         ethereum: {
@@ -27,7 +27,10 @@ const config = {
         }
     },
     etherscan: {
-        apiKey: process.env.POLYGONSCAN_API_KEY!
+        apiKey: {
+            polygonMumbai: process.env.POLYGONSCAN_API_KEY!,
+            goerli: process.env.ETHERSCAN_API_KEY!
+        }
     },
     solidity: {
         version: "0.8.17",
