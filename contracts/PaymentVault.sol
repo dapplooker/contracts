@@ -14,18 +14,34 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *		PaymentVault.withdraw() function to owners wallet.
  */
 contract PaymentVault is Initializable {
+
 	using SafeERC20Upgradeable for IERC20Upgradeable;
 
-	/** Contains the address of owner. */
+
+	/* Events */
+
+	event DepositCompleted(
+        address sender,
+        uint256 amount)
+    ;
+
+	event WithdrawCompleted(
+        address token,
+        address beneficiary,
+        uint256 amount
+    );
+
+    /** Variables */
+
 	address owner;
 
-	/** Events which will be emitted on operation completes. */
-	event DepositCompleted(address sender, uint256 amount);
-	event WithdrawCompleted(address token, address beneficiary, uint256 amount);
+    /* Special Functions */
 
 	function initialize() public initializer {
 		owner = msg.sender;
 	}
+
+    /* External Functions */
 
 	/**
  	 * @dev Deposit `amount` of `erc20` tokens from this user's wallet to `contract`.
@@ -36,9 +52,12 @@ contract PaymentVault is Initializable {
 	function deposit(
 		IERC20Upgradeable _token,
 		uint256 _amount
-	) public {
+	) external {
+
 		uint256 balance = _token.balanceOf(address(msg.sender));
-		require(balance >= _amount, "Your wallet balance for token is low");
+
+		require(balance >= _amount, "Your wallet balance for token is low.");
+
 		_token.safeTransferFrom(msg.sender, address(this), _amount);
 
 		emit DepositCompleted(msg.sender, _amount);
@@ -53,10 +72,15 @@ contract PaymentVault is Initializable {
 	function withdraw(
 		IERC20Upgradeable _token,
 		uint256 _amount
-	) public {
+	) external
+    {
+
 		require(msg.sender == owner, "Only owner can withdraw funds");
+
 		require(_amount > 0, "Withdraw amount must be greater than 0");
+
 		require(_token.balanceOf(address(this)) >= _amount, "Insufficient funds");
+
 		_token.safeTransfer(msg.sender, _amount);
 
 		emit WithdrawCompleted(address(_token), msg.sender, _amount);
