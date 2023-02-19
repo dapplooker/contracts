@@ -48,7 +48,9 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
 	function deposit(
 		IERC20Upgradeable _token,
 		uint256 _amount
-	) external {
+	)
+        external
+    {
 
 		uint256 balance = _token.balanceOf(address(msg.sender));
 
@@ -68,7 +70,10 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
 	function withdraw(
 		IERC20Upgradeable _token,
 		uint256 _amount
-	) public onlyOwner {
+	)
+        external
+        onlyOwner
+    {
 		require(_amount > 0, "Withdraw amount must be greater than 0");
 
 		require(_token.balanceOf(address(this)) >= _amount, "Insufficient funds");
