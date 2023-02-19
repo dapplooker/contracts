@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 
 /**
@@ -13,7 +14,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *		to the PaymentVault contract, which later can be withdrawn using
  *		PaymentVault.withdraw() function to owners wallet.
  */
-contract PaymentVault is Initializable {
+contract PaymentVault is Initializable, OwnableUpgradeable {
 
 	using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -36,9 +37,8 @@ contract PaymentVault is Initializable {
 	address owner;
 
     /* Special Functions */
-
 	function initialize() public initializer {
-		owner = msg.sender;
+		__Ownable_init();
 	}
 
     /* External Functions */
@@ -72,11 +72,7 @@ contract PaymentVault is Initializable {
 	function withdraw(
 		IERC20Upgradeable _token,
 		uint256 _amount
-	) external
-    {
-
-		require(msg.sender == owner, "Only owner can withdraw funds");
-
+	) public onlyOwner {
 		require(_amount > 0, "Withdraw amount must be greater than 0");
 
 		require(_token.balanceOf(address(this)) >= _amount, "Insufficient funds");

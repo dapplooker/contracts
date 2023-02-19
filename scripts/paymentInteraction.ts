@@ -75,6 +75,14 @@ class PaymentWrapper {
         await this.waitForTransactionStatus(txHash, "WITHDRAW");
     }
 
+    public async transferOwnership(newOwnerAddress: string) {
+        const oThis = this;
+        console.log("\n ======================= Starting transfer ownership funds transaction =======================");
+        let depositCallEncoded = this.paymentInstance.methods.transferOwnership(newOwnerAddress).encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
+        await this.waitForTransactionStatus(txHash, "WITHDRAW");
+    }
+
     private async sendTransaction(txDataEncoded: any, privateKey: string, toContract: string, operation: string) {
         let block = await this.web3.eth.getBlock('latest');
         let gasLimit = Math.round(block.gasLimit / block.transactions.length);
@@ -112,6 +120,7 @@ class PaymentWrapper {
             }
         }
     }
+
     private decodeData(receiptLogData: string){
         const reason = this.web3.utils.hexToNumberString(receiptLogData);
         return reason;
@@ -121,16 +130,21 @@ class PaymentWrapper {
 async function doTransactions(networkName: string, tokenName: string) {
     const paymentVault = new PaymentWrapper(networkName, tokenName);
     await paymentVault.approveFunds(Constant.transferAmountInGWEI).then(() =>
-        console.log(`Approve transaction successful. Approved funds to ${Constant.contractAddress[networkName][tokenName]}`)
+        console.log(`Approve transaction done. Approved funds to ${Constant.contractAddress[networkName][tokenName]}`)
     );
     await sleep(1000);
     await paymentVault.depositFunds(Constant.transferAmountInGWEI).then(() =>
-        console.log(`Deposit transaction successful. Deposited funds to ${Constant.contractAddress[networkName][tokenName]}`)
+        console.log(`Deposit transaction done. Deposited funds to ${Constant.contractAddress[networkName][tokenName]}`)
     );
     await sleep(1000);
     await paymentVault.withdrawFunds(Constant.transferAmountInGWEI).then(() =>
-        console.log(`Withdraw transaction successful. Withdrawn funds to ${Constant.contractAddress[networkName]["deployerAddress"]}`)
+        console.log(`Withdraw transaction done. Withdrawn funds to ${Constant.contractAddress[networkName]["deployerAddress"]}`)
     );
+    await sleep(1000);
+    await paymentVault.transferOwnership(process.env.NEW_OWNER_WALLET_ADDRESS!).then(() =>
+        console.log(`Transfer ownership transaction done.`)
+    );
+
 }
 
 function executeContracts(args: string[]) {
