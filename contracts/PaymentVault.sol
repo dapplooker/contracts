@@ -32,10 +32,6 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
         uint256 amount
     );
 
-    /** Variables */
-
-	address owner;
-
     /* Special Functions */
 	function initialize() public initializer {
 		__Ownable_init();
