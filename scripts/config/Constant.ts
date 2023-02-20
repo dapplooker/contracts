@@ -15,6 +15,7 @@ class Constant {
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
                 "deployerPrivateKey": process.env.DEPLOYER_PRIVATE_KEY!,
+                "newWalletPrivateKey": process.env.NEW_OWNER_PRIVATE_KEY!,
                 "rpcURL": process.env.RPC_URL!,
             },
             "goerli": {
@@ -25,6 +26,7 @@ class Constant {
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
                 "deployerPrivateKey": process.env.DEPLOYER_PRIVATE_KEY!,
+                "newWalletPrivateKey": process.env.NEW_OWNER_PRIVATE_KEY!,
                 "rpcURL": process.env.RPC_URL!,
             },
             "polygon": {
@@ -35,6 +37,7 @@ class Constant {
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
                 "deployerPrivateKey": process.env.DEPLOYER_PRIVATE_KEY!,
+                "newWalletPrivateKey": process.env.NEW_OWNER_PRIVATE_KEY!,
                 "rpcURL": process.env.RPC_URL!,
             },
             "ethereum": {
@@ -45,6 +48,7 @@ class Constant {
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
                 "deployerPrivateKey": process.env.DEPLOYER_PRIVATE_KEY!,
+                "newWalletPrivateKey": process.env.NEW_OWNER_PRIVATE_KEY!,
                 "rpcURL": process.env.RPC_URL!,
             }
         }

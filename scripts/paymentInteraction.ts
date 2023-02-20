@@ -3,6 +3,7 @@ import {contractABI} from './config/PaymentABI';
 import {erc20TokenContractAbi} from './config/ERC20ABI';
 import Constant from './config/Constant';
 import upgradeHardhatObj from "hardhat";
+import assert from "assert";
 
 require('dotenv').config()
 
@@ -35,6 +36,8 @@ class PaymentWrapper {
 
     private deployerPrivateKey: string;
 
+    private newWalletPrivateKey: string;
+
 
     constructor(networkName: string, tokenName: string) {
         this.tokenContractAddress = Constant.contractAddress[networkName][tokenName];
@@ -44,10 +47,59 @@ class PaymentWrapper {
         this.userPrivateKey = Constant.contractAddress[networkName]["userPrivateKey"];
         this.deployerWalletAddress = Constant.contractAddress[networkName]["deployerAddress"];
         this.deployerPrivateKey = Constant.contractAddress[networkName]["deployerPrivateKey"];
+        this.newWalletPrivateKey = Constant.contractAddress[networkName]["newWalletPrivateKey"];
 
         this.web3 = new Web3(this.networkRPCURL);
         this.web3.eth.accounts.wallet.add(this.userPrivateKey);
         this.paymentInstance = new this.web3.eth.Contract(contractABI.abi as any, this.paymentContract);
+    }
+
+    private async _checkAllowance(ownerAddress: string, spenderAddress: string): Promise<bigint> {
+        const oThis = this;
+        let allowedAmount: bigint = BigInt(0);
+        let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
+        tokenInstance.methods.allowance(ownerAddress, spenderAddress)
+            .call(function (err: any, res: any) {
+            if (err) {
+                console.log("An error occurred", err)
+                return 0;
+            }
+            console.log("The balance is: ", res);
+            allowedAmount = res;
+        })
+        return allowedAmount;
+    }
+
+    private async _checkTokenBalance(accountAddress: string): Promise<bigint> {
+        const oThis = this;
+        let balanceOfAccount: bigint = BigInt(0);
+        let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
+        tokenInstance.methods.balanceOf(accountAddress)
+            .call(function (err: any, res: any) {
+                if (err) {
+                    console.log("An error occurred", err)
+                    return 0;
+                }
+                console.log("The balance is: ", res);
+                balanceOfAccount = res;
+            })
+        return balanceOfAccount;
+    }
+
+    private async _checkOwnerUpdate(): Promise<string> {
+        const oThis = this;
+        let balanceOfAccount: string = "";
+        let tokenInstance = new this.web3.eth.Contract(contractABI.abi as any, oThis.paymentContract);
+        tokenInstance.methods.owner()
+            .call(function (err: any, res: any) {
+                if (err) {
+                    console.log("An error occurred", err)
+                    return 0;
+                }
+                console.log("The owner is: ", res);
+                balanceOfAccount = res;
+            })
+        return balanceOfAccount;
     }
 
     public async approveFunds(amount: bigint) {
@@ -57,6 +109,8 @@ class PaymentWrapper {
         let approveTransaction = tokenInstance.methods.approve(oThis.paymentContract, amount).encodeABI();
         const txHash = await this.sendTransaction(approveTransaction, oThis.userPrivateKey, oThis.tokenContractAddress, "APPROVE");
         await this.waitForTransactionStatus(txHash, "APPROVE");
+        let allowedAmount = await oThis._checkAllowance(oThis.userWalletAddress, oThis.paymentContract);
+        assert(allowedAmount < amount, `Total allowed amount ${allowedAmount} is less then expected ${amount}`);
     }
 
     public async depositFunds(amount: bigint) {
@@ -65,14 +119,19 @@ class PaymentWrapper {
         let depositCallEncoded = this.paymentInstance.methods.deposit(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.userPrivateKey, oThis.paymentContract, "DEPOSIT");
         await this.waitForTransactionStatus(txHash, "DEPOSIT");
+        let balanceOfAccount = await oThis._checkTokenBalance(oThis.paymentContract);
+        assert(balanceOfAccount < amount, `Total balance ${balanceOfAccount} for contract is less then expected ${amount}`);
     }
 
     public async withdrawFunds(amount: bigint) {
         const oThis = this;
         console.log("\n ======================= Starting withdraw funds transaction =======================");
+        let balanceOfAccountBefore = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
         let depositCallEncoded = this.paymentInstance.methods.withdraw(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "WITHDRAW");
         await this.waitForTransactionStatus(txHash, "WITHDRAW");
+        let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
+        assert(balanceOfAccountBefore >= balanceOfAccountAfter, `Total balance of owner is not as expected`);
     }
 
     public async transferOwnership(newOwnerAddress: string) {
@@ -80,8 +139,21 @@ class PaymentWrapper {
         console.log("\n ======================= Starting transfer ownership funds transaction =======================");
         let depositCallEncoded = this.paymentInstance.methods.transferOwnership(newOwnerAddress).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
-        await this.waitForTransactionStatus(txHash, "WITHDRAW");
+        await this.waitForTransactionStatus(txHash, "TRANSFER_OWNERSHIP");
+        let updatedOwner = await oThis._checkOwnerUpdate();
+        assert(updatedOwner != newOwnerAddress, `Ownership not transferred as expected.`);
     }
+
+    public async revertOwnership() {
+        const oThis = this;
+        console.log("\n ======================= Starting transfer ownership funds transaction =======================");
+        let depositCallEncoded = this.paymentInstance.methods.transferOwnership(oThis.deployerWalletAddress).encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, oThis.newWalletPrivateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
+        await this.waitForTransactionStatus(txHash, "TRANSFER_OWNERSHIP");
+        let updatedOwner = await oThis._checkOwnerUpdate();
+        assert(updatedOwner !== oThis.deployerWalletAddress, `Ownership not reverted as expected`);
+    }
+
 
     private async sendTransaction(txDataEncoded: any, privateKey: string, toContract: string, operation: string) {
         let block = await this.web3.eth.getBlock('latest');
@@ -143,6 +215,10 @@ async function doTransactions(networkName: string, tokenName: string) {
     await sleep(1000);
     await paymentVault.transferOwnership(process.env.NEW_OWNER_WALLET_ADDRESS!).then(() =>
         console.log(`Transfer ownership transaction done.`)
+    );
+    await sleep(3000);
+    await paymentVault.revertOwnership().then(() =>
+        console.log(`Reverted ownership transaction done.`)
     );
 
 }
