@@ -4,6 +4,7 @@ import {erc20TokenContractAbi} from './config/ERC20ABI';
 import Constant from './config/Constant';
 import upgradeHardhatObj from "hardhat";
 import assert from "assert";
+import BigNumber from "bignumber.js";
 
 require('dotenv').config()
 
@@ -58,13 +59,13 @@ class PaymentWrapper {
         const oThis = this;
         let allowedAmount: bigint = BigInt(0);
         let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
-        tokenInstance.methods.allowance(ownerAddress, spenderAddress)
+        await tokenInstance.methods.allowance(ownerAddress, spenderAddress)
             .call(function (err: any, res: any) {
             if (err) {
                 console.log("An error occurred", err)
                 return 0;
             }
-            console.log("The balance is: ", res);
+            console.log("The allowance is: ", res);
             allowedAmount = res;
         })
         return allowedAmount;
@@ -74,7 +75,7 @@ class PaymentWrapper {
         const oThis = this;
         let balanceOfAccount: bigint = BigInt(0);
         let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
-        tokenInstance.methods.balanceOf(accountAddress)
+        await tokenInstance.methods.balanceOf(accountAddress)
             .call(function (err: any, res: any) {
                 if (err) {
                     console.log("An error occurred", err)
@@ -105,22 +106,31 @@ class PaymentWrapper {
     public async approveFunds(amount: bigint) {
         const oThis = this;
         console.log("\n ======================= Starting approve funds transaction =======================");
+        let allowedAmountBefore = await oThis._checkAllowance(oThis.userWalletAddress, oThis.paymentContract);
+
         let tokenInstance = new this.web3.eth.Contract(erc20TokenContractAbi as any, oThis.tokenContractAddress);
         let approveTransaction = tokenInstance.methods.approve(oThis.paymentContract, amount).encodeABI();
         const txHash = await this.sendTransaction(approveTransaction, oThis.userPrivateKey, oThis.tokenContractAddress, "APPROVE");
         await this.waitForTransactionStatus(txHash, "APPROVE");
-        let allowedAmount = await oThis._checkAllowance(oThis.userWalletAddress, oThis.paymentContract);
-        assert(allowedAmount < amount, `Total allowed amount ${allowedAmount} is less then expected ${amount}`);
+
+        await sleep(3000);
+        let allowedAmountAfter = await oThis._checkAllowance(oThis.userWalletAddress, oThis.paymentContract);
+        let diffNumber = new BigNumber(allowedAmountAfter.toString()).minus(allowedAmountBefore.toString());
+        assert(diffNumber.toNumber() >= BigInt(0), `Total allowed amount ${allowedAmountAfter} is not as expected`);
     }
 
     public async depositFunds(amount: bigint) {
         const oThis = this;
         console.log("\n ======================= Starting deposit funds transaction =======================");
+        let balanceOfAccountBefore = await oThis._checkTokenBalance(oThis.paymentContract);
         let depositCallEncoded = this.paymentInstance.methods.deposit(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.userPrivateKey, oThis.paymentContract, "DEPOSIT");
         await this.waitForTransactionStatus(txHash, "DEPOSIT");
-        let balanceOfAccount = await oThis._checkTokenBalance(oThis.paymentContract);
-        assert(balanceOfAccount < amount, `Total balance ${balanceOfAccount} for contract is less then expected ${amount}`);
+
+        await sleep(3000);
+        let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.paymentContract);
+        let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
+        assert(diffNumber.isEqualTo(amount.toString()), `Total balance ${balanceOfAccountAfter} is not as expected`);
     }
 
     public async withdrawFunds(amount: bigint) {
@@ -130,8 +140,11 @@ class PaymentWrapper {
         let depositCallEncoded = this.paymentInstance.methods.withdraw(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "WITHDRAW");
         await this.waitForTransactionStatus(txHash, "WITHDRAW");
+
+        await sleep(3000);
         let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
-        assert(balanceOfAccountBefore >= balanceOfAccountAfter, `Total balance of owner is not as expected`);
+        let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
+        assert(diffNumber.isEqualTo(amount.toString()), `Total balance of owner is not as expected`);
     }
 
     public async transferOwnership(newOwnerAddress: string) {
@@ -220,7 +233,6 @@ async function doTransactions(networkName: string, tokenName: string) {
     await paymentVault.revertOwnership().then(() =>
         console.log(`Reverted ownership transaction done.`)
     );
-
 }
 
 function executeContracts(args: string[]) {
