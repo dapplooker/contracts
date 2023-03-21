@@ -9,6 +9,8 @@ https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20
 - Users can pay for services in ERC20 tokens like USDT/USDC
 
 ## Deploying the Contracts
+Install all dependencies with command `npm i`.
+
 Update the `.env` file and compile the code:
 `npx hardhat compile`
 
@@ -24,3 +26,8 @@ Update the environment variable `PROXY_CONTRACT_ADDRESS` with proxy contract.
 #### Verify contract:
 Verify proxy contract after each deployment for upgrade
 `npx hardhat verify --network <network-name> <proxy-contract-address>`
+
+## Contract unit testing after deployment
+Update the `.env` file as required.
+Run following command to test the contract for network and token
+`ts-node scripts/paymentInteraction.ts <network_name> <token_name>`
