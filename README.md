@@ -26,3 +26,8 @@ Update the environment variable `PROXY_CONTRACT_ADDRESS` with proxy contract.
 #### Verify contract:
 Verify proxy contract after each deployment for upgrade
 `npx hardhat verify --network <network-name> <proxy-contract-address>`
+
+## Contract unit testing after deployment
+Update the `.env` file as required.
+Run following command to test the contract for network and token
+`ts-node scripts/paymentInteraction.ts <network_name> <token_name>`
