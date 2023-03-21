@@ -9,6 +9,8 @@ https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20
 - Users can pay for services in ERC20 tokens like USDT/USDC
 
 ## Deploying the Contracts
+Install all dependencies with command `npm i`.
+
 Update the `.env` file and compile the code:
 `npx hardhat compile`
 
