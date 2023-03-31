@@ -10,7 +10,7 @@ class Constant {
             "mumbai": {
                 "usdt": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
                 "usdc": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
-                "paymentVault": process.env.PROXY_CONTRACT_ADDRESS!,
+                "paymentVault": process.env.PAYMENT_VAULT_CONTRACT_ADDRESS!,
                 "userAddress": process.env.USER_WALLET_ADDRESS!,
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
@@ -21,7 +21,7 @@ class Constant {
             "goerli": {
                 "usdt": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
                 "usdc": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
-                "paymentVault": process.env.PROXY_CONTRACT_ADDRESS!,
+                "paymentVault": process.env.PAYMENT_VAULT_CONTRACT_ADDRESS!,
                 "userAddress": process.env.USER_WALLET_ADDRESS!,
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
@@ -32,7 +32,7 @@ class Constant {
             "polygon": {
                 "usdt": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
                 "usdc": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
-                "paymentVault": process.env.PROXY_CONTRACT_ADDRESS!,
+                "paymentVault": process.env.PAYMENT_VAULT_CONTRACT_ADDRESS!,
                 "userAddress": process.env.USER_WALLET_ADDRESS!,
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",
@@ -43,7 +43,7 @@ class Constant {
             "ethereum": {
                 "usdt": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
                 "usdc": "0x326C977E6efc84E512bB9C30f76E30c160eD06FB",
-                "paymentVault": process.env.PROXY_CONTRACT_ADDRESS!,
+                "paymentVault": process.env.PAYMENT_VAULT_CONTRACT_ADDRESS!,
                 "userAddress": process.env.USER_WALLET_ADDRESS!,
                 "userPrivateKey": process.env.USER_PRIVATE_KEY!,
                 "deployerAddress": "0x25563e07Bfb35c21938A9890d3A3ac2B2D47D172",

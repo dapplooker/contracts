@@ -21,7 +21,7 @@ Update the `.env` file with following details:
 - `DEPLOYER_PRIVATE_KEY`: Private key of deployer wallet which is used for deploying the contract
 - `NEW_OWNER_PRIVATE_KEY`: Private key of new owner's wallet. [Not required for during deployment]
 - `NEW_OWNER_WALLET_ADDRESS`: New owner's wallet address. [Not required for during deployment]
-- `PROXY_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment. [Required during upgrade]
+- `PAYMENT_VAULT_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment. [Required during upgrade]
 - `CHAINSCAN_API_KEY`: Etherscan API key, used by hardhat for deployment and verification.
 
 ### Compile the code:
@@ -30,12 +30,7 @@ Update the `.env` file with following details:
 ### Deploy proxy:
 Proxy deployment should happen only once:
 
-`npx hardhat run scripts/proxy-deploy.ts --network <network-name>`
-
-### Upgrade contract:
-Update the environment variable `PROXY_CONTRACT_ADDRESS` with proxy contract.
-
-`npx hardhat run scripts/upgrade-deploy.ts --network <network-name>`
+`npx hardhat run scripts/deploy.ts --network <network-name>`
 
 ### Verify contract:
 Verify proxy contract after each deployment for upgrade
@@ -54,7 +49,7 @@ After deployment of contract, update the `.env` file as required, details below.
 - `DEPLOYER_PRIVATE_KEY`: Private key of deployer wallet which is used for deploying the contract
 - `NEW_OWNER_PRIVATE_KEY`: Private key of new owner's wallet. This is used for testing transferOwner function. 
 - `NEW_OWNER_WALLET_ADDRESS`: New owner's wallet address. This is used for testing transferOwner function
-- `PROXY_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment.
+- `PAYMENT_VAULT_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment.
 - `CHAINSCAN_API_KEY`: Etherscan API key, used by hardhat for deployment and verification.
 
 ### Run following command to test the contract for network and token

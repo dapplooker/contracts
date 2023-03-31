@@ -1,10 +1,10 @@
 require('dotenv').config()
 
-const proxyHardhatObj = require("hardhat")
+const hardhatObj = require("hardhat")
 
 async function deployProxyContract() {
-  const paymentVaultGateway = await proxyHardhatObj.ethers.getContractFactory("PaymentVault");
-  const paymentVaultGatewayDeploy = await proxyHardhatObj.upgrades.deployProxy(paymentVaultGateway);
+  const paymentVaultGateway = await hardhatObj.ethers.getContractFactory("PaymentVault");
+  const paymentVaultGatewayDeploy = await paymentVaultGateway.deploy();
   await paymentVaultGatewayDeploy.deployed();
 
   console.log(`Contract successfully deployed to ${paymentVaultGatewayDeploy.address}`);
