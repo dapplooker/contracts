@@ -1,14 +1,16 @@
-const hardhat = require("hardhat")
+require('dotenv').config()
 
-async function main() {
-  const multiTokenPaymentGateway = await hardhat.ethers.getContractFactory("VaultTesting");
-  const multiTokenPaymentGatewayDeploy = await multiTokenPaymentGateway.deploy();
-  await multiTokenPaymentGatewayDeploy.deployed();
+const proxyHardhatObj = require("hardhat")
 
-  console.log(`Contract successfully deployed to ${multiTokenPaymentGatewayDeploy.address}`);
+async function deployProxyContract() {
+  const paymentVaultGateway = await proxyHardhatObj.ethers.getContractFactory("PaymentVault");
+  const paymentVaultGatewayDeploy = await proxyHardhatObj.upgrades.deployProxy(paymentVaultGateway);
+  await paymentVaultGatewayDeploy.deployed();
+
+  console.log(`Contract successfully deployed to ${paymentVaultGatewayDeploy.address}`);
 }
 
-main().catch((error) => {
+deployProxyContract().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });

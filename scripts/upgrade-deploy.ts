@@ -1,13 +1,15 @@
-const hre = require("hardhat")
-const { ethers, upgrades } = require('hardhat');
+require('dotenv').config()
 
-async function _main() {
-    const contractFactory = await hre.ethers.getContractFactory("MultiTokenPaymentGateway");
-    const contractUpgrade = await upgrades.upgradeProxy("0x94c63c354Ef6D35510a393d9C71AA617b38216BD", contractFactory);
+const upgradeHardhatObj = require("hardhat")
+
+async function deployUpgradeContract() {
+    const contractFactory = await upgradeHardhatObj.ethers.getContractFactory("PaymentVault");
+    let proxyContractAddress: string = process.env.PROXY_CONTRACT_ADDRESS!;
+    const contractUpgrade = await upgradeHardhatObj.upgrades.upgradeProxy(proxyContractAddress, contractFactory);
     console.log(`Contract upgraded deployed to ${contractUpgrade.address}`);
 }
 
-_main().catch((error) => {
+deployUpgradeContract().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
