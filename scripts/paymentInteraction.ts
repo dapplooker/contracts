@@ -197,8 +197,14 @@ class PaymentWrapper {
             const signedTx = await this.web3.eth.accounts.signTransaction(transactionParameters, privateKey);
             console.log(`${operation}: Signed transaction details: ${JSON.stringify(signedTx)}`);
             this.web3.eth.sendSignedTransaction(signedTx.rawTransaction,
-                function (error: Error, hash: string){console.log(`Callback function error check: ${error}`)})
-                .on( 'error' , function( error: any ) { console.error( error.message ); });
+                function (error: Error, hash: string)
+                {
+                    console.log(`Callback function error check: ${error}`);
+                    return "";
+                }).on( 'error' , function( error: any ) {
+                    console.error( error.message );
+                    return "";
+                });
             return signedTx.transactionHash;
         } catch (error) {
             console.log(`${operation} Error: ${error}`);
@@ -207,6 +213,10 @@ class PaymentWrapper {
 
 
     private async waitForTransactionStatus(txHash: string, operation: string) {
+        if (txHash === ""){
+            console.log(`Error in transaction`);
+            return;
+        }
         while (true) {
             const txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
             if (txReceipt !== null) {
