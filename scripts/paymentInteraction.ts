@@ -215,7 +215,7 @@ class PaymentWrapper {
     private async waitForTransactionStatus(txHash: string, operation: string) {
         if (txHash === ""){
             console.log(`Error in transaction`);
-            return;
+            process.exit(1);
         }
         while (true) {
             const txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
