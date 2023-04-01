@@ -77,12 +77,4 @@ contract PaymentVault is SafeOwn {
 
 		emit WithdrawCompleted(address(_token), msg.sender, _amount);
 	}
-
-	/**
- 	 * @dev renounceOwnership of contract.
-     *
-     */
-	function renounceOwnership() public override onlyOwner {
-
-	}
 }

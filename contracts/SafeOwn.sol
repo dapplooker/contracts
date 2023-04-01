@@ -27,7 +27,6 @@ abstract contract SafeOwn {
 
 	/**
 	* @notice Initializes the Deployer as the Owner of the contract.
-     * @param renounceInterval time in seconds after which the Owner will be removed.
      */
 
 	constructor(){
