@@ -1,7 +1,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./SafeOwn.sol";
 
 
 /**
@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *		to the PaymentVault contract, which later can be withdrawn using
  *		PaymentVault.withdraw() function to owners wallet.
  */
-contract PaymentVault is Ownable {
+contract PaymentVault is SafeOwn {
 
 	/* Events */
 
@@ -28,7 +28,7 @@ contract PaymentVault is Ownable {
 	);
 
 	/* Constructor */
-	constructor() Ownable() {
+	constructor() SafeOwn() {
 
 	}
 
