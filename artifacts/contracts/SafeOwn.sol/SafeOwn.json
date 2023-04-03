@@ -14,37 +14,18 @@
         },
         {
           "indexed": true,
-          "internalType": "uint256",
-          "name": "trasnferredTimestamp",
-          "type": "uint256"
-        }
-      ],
-      "name": "ownershipRetained",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "currentOwner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
           "internalType": "address",
           "name": "newOwner",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "internalType": "uint256",
-          "name": "trasnferredTimestamp",
+          "name": "transferredTimestamp",
           "type": "uint256"
         }
       ],
-      "name": "ownershipTransferred",
+      "name": "OwnershipTransferred",
       "type": "event"
     },
     {
@@ -84,7 +65,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "newOwner",
+          "name": "_newOwner",
           "type": "address"
         }
       ],

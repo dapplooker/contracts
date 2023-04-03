@@ -27,7 +27,7 @@ abstract contract SafeOwn {
 	constructor()
     {
 		_Owner = msg.sender;
-		emit ownershipTransferred(address(0), _Owner, block.timestamp);
+		emit OwnershipTransferred(address(0), _Owner, block.timestamp);
 	}
 
 	/**
@@ -76,7 +76,7 @@ abstract contract SafeOwn {
 
 	/**
 	 * @notice Owner can propose ownership to a new Owner(newOwner).
-     * @param newOwner address of the new owner to propose ownership to.
+     * @param _newOwner address of the new owner to propose ownership to.
      */
 	function proposeOwnership(
 		address _newOwner
@@ -85,7 +85,7 @@ abstract contract SafeOwn {
 	virtual
 	onlyOwner
     {
-		require(newOwner != address(0), "SafeOwn: New Owner can not be a Zero Address");
+		require(_newOwner != address(0), "SafeOwn: New Owner can not be a Zero Address");
 		_pendingOwner = _newOwner;
 	}
 
