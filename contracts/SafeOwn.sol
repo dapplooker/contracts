@@ -12,16 +12,9 @@ abstract contract SafeOwn {
 	/**
 	* @dev Emitted when the Ownership is transferred.
      */
-	event ownershipTransferred(
+	event OwnershipTransferred(
 		address indexed currentOwner,
 		address indexed newOwner,
-		uint256 indexed trasnferredTimestamp
-	);
-	/**
-	* @dev Emitted when the Ownership is retained by the current Owner.
-     */
-	event ownershipRetained(
-		address indexed currentOwner,
 		uint256 indexed trasnferredTimestamp
 	);
 
