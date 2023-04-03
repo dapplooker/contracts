@@ -6,7 +6,9 @@ pragma solidity ^0.8.17;
 * then new owner have to accept the ownership.
 */
 abstract contract SafeOwn {
+
 	address private _Owner;
+
 	address private _pendingOwner;
 
 	/**
@@ -15,7 +17,7 @@ abstract contract SafeOwn {
 	event OwnershipTransferred(
 		address indexed currentOwner,
 		address indexed newOwner,
-		uint256 indexed trasnferredTimestamp
+		uint256 transferredTimestamp
 	);
 
 	/**
@@ -47,7 +49,7 @@ abstract contract SafeOwn {
 	}
 
 	/**
-	* @notice Returns the current Owner.
+	 * @notice Returns the current Owner.
      * @dev Returns owner of contract
      */
 
@@ -61,7 +63,7 @@ abstract contract SafeOwn {
 	}
 
 	/**
-	* @notice Returns the Pending Owner.
+	 * @notice Returns the Pending Owner.
      */
 	function pendingOwner()
 	public
@@ -73,24 +75,22 @@ abstract contract SafeOwn {
 	}
 
 	/**
-	* @notice Owner can propose ownership to a new Owner(newOwner).
-     * @dev Owner can not propose ownership, if it has called renounceOwnership and
-     * not retained the ownership yet.
+	 * @notice Owner can propose ownership to a new Owner(newOwner).
      * @param newOwner address of the new owner to propose ownership to.
      */
 	function proposeOwnership(
-		address newOwner
+		address _newOwner
 	)
     public
 	virtual
 	onlyOwner
     {
 		require(newOwner != address(0), "SafeOwn: New Owner can not be a Zero Address");
-		_pendingOwner = newOwner;
+		_pendingOwner = _newOwner;
 	}
 
 	/**
-	* @notice Pending Owner can accept the ownership proposal and become the new Owner.
+	 * @notice Pending Owner can accept the ownership proposal and become the new Owner.
      */
 	function acceptOwnership()
 	public
@@ -101,6 +101,6 @@ abstract contract SafeOwn {
 		address newOwner = _pendingOwner;
 		_Owner = _pendingOwner;
 		_pendingOwner = address(0);
-		emit ownershipTransferred(currentOwner, newOwner, block.timestamp);
+		emit OwnershipTransferred(currentOwner, newOwner, block.timestamp);
 	}
 }
