@@ -87,7 +87,8 @@ abstract contract SafeOwn {
      */
 	function proposeOwnership(
 		address newOwner
-	) public
+	)
+    public
 	virtual
 	onlyOwner
     {
