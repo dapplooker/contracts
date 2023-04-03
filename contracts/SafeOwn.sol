@@ -22,7 +22,8 @@ abstract contract SafeOwn {
 	* @notice Initializes the Deployer as the Owner of the contract.
      */
 
-	constructor(){
+	constructor()
+    {
 		_Owner = msg.sender;
 		emit ownershipTransferred(address(0), _Owner, block.timestamp);
 	}
@@ -30,7 +31,8 @@ abstract contract SafeOwn {
 	/**
 	* @notice Throws if the caller is not the Owner.
      */
-	modifier onlyOwner(){
+	modifier onlyOwner()
+    {
 		require(Owner() == msg.sender, "SafeOwn: Caller is the not the Owner");
 		_;
 	}
@@ -38,7 +40,8 @@ abstract contract SafeOwn {
 	/**
 	* @notice Throws if the caller is not the Pending Owner.
      */
-	modifier onlyPendingOwner(){
+	modifier onlyPendingOwner()
+    {
 		require(_pendingOwner == msg.sender, "SafeOwn: Caller is the not the Pending Owner");
 		_;
 	}
@@ -52,7 +55,8 @@ abstract contract SafeOwn {
 	public
 	view
 	virtual
-	returns (address){
+	returns (address)
+    {
 		return _Owner;
 	}
 
@@ -63,7 +67,8 @@ abstract contract SafeOwn {
 	public
 	view
 	virtual
-	returns (address){
+	returns (address)
+    {
 		return _pendingOwner;
 	}
 
@@ -75,9 +80,11 @@ abstract contract SafeOwn {
      */
 	function proposeOwnership(
 		address newOwner
-	) public
+	)
+    public
 	virtual
-	onlyOwner {
+	onlyOwner
+    {
 		require(newOwner != address(0), "SafeOwn: New Owner can not be a Zero Address");
 		_pendingOwner = newOwner;
 	}
@@ -88,7 +95,8 @@ abstract contract SafeOwn {
 	function acceptOwnership()
 	public
 	virtual
-	onlyPendingOwner {
+	onlyPendingOwner
+    {
 		address currentOwner = _Owner;
 		address newOwner = _pendingOwner;
 		_Owner = _pendingOwner;
