@@ -18,10 +18,11 @@ Update the `.env` file with following details:
 - `RPC_URL`: RPC url of network.
 - `USER_PRIVATE_KEY`: Private key of user's wallet from which payment has to be done. [Not required for during deployment]
 - `USER_WALLET_ADDRESS`: User's wallet address from which payment has to be done. [Not required for during deployment]
+- `DEPLOYER_WALLET_ADDRESS`: Deployer's wallet address.
 - `DEPLOYER_PRIVATE_KEY`: Private key of deployer wallet which is used for deploying the contract
 - `NEW_OWNER_PRIVATE_KEY`: Private key of new owner's wallet. [Not required for during deployment]
 - `NEW_OWNER_WALLET_ADDRESS`: New owner's wallet address. [Not required for during deployment]
-- `PAYMENT_VAULT_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment. [Required during upgrade]
+- `PAYMENT_VAULT_CONTRACT_ADDRESS`: Contract address of proxy contract, which we get after deployment.
 - `CHAINSCAN_API_KEY`: Etherscan API key, used by hardhat for deployment and verification.
 
 ### Compile the code:
@@ -46,6 +47,7 @@ After deployment of contract, update the `.env` file as required, details below.
 - `RPC_URL`: RPC url of network
 - `USER_PRIVATE_KEY`: Private key of user's wallet from which payment has to be done
 - `USER_WALLET_ADDRESS`: User's wallet address from which payment has to be done
+- `DEPLOYER_WALLET_ADDRESS`: Deployer's wallet address.
 - `DEPLOYER_PRIVATE_KEY`: Private key of deployer wallet which is used for deploying the contract
 - `NEW_OWNER_PRIVATE_KEY`: Private key of new owner's wallet. This is used for testing transferOwner function. 
 - `NEW_OWNER_WALLET_ADDRESS`: New owner's wallet address. This is used for testing transferOwner function
