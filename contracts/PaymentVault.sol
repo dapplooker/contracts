@@ -18,6 +18,7 @@ contract PaymentVault is SafeOwn {
 	/* Events */
 
 	event DepositCompleted(
+		address indexed token,
 		address indexed sender,
 		uint256 amount)
 	;
@@ -54,7 +55,7 @@ contract PaymentVault is SafeOwn {
 
 		_token.safeTransferFrom(msg.sender, address(this), _amount);
 
-		emit DepositCompleted(msg.sender, _amount);
+		emit DepositCompleted(address(_token), msg.sender, _amount);
 	}
 
 	/**
