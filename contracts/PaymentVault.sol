@@ -1,6 +1,6 @@
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./SafeOwn.sol";
 
 
@@ -13,6 +13,7 @@ import "./SafeOwn.sol";
  *		PaymentVault.withdraw() function to owners wallet.
  */
 contract PaymentVault is SafeOwn {
+	using SafeERC20 for IERC20;
 
 	/* Events */
 
@@ -41,7 +42,7 @@ contract PaymentVault is SafeOwn {
      * @param _amount of tokens to deposit.
      */
 	function deposit(
-		ERC20 _token,
+		IERC20 _token,
 		uint256 _amount
 	)
 	external
@@ -51,7 +52,7 @@ contract PaymentVault is SafeOwn {
 
 		require(balance >= _amount, "Your wallet balance for token is low.");
 
-		_token.transferFrom(msg.sender, address(this), _amount);
+		_token.safeTransferFrom(msg.sender, address(this), _amount);
 
 		emit DepositCompleted(msg.sender, _amount);
 	}
@@ -63,7 +64,7 @@ contract PaymentVault is SafeOwn {
      * @param _amount of tokens to withdrawn.
      */
 	function withdraw(
-		ERC20 _token,
+		IERC20 _token,
 		uint256 _amount
 	)
 	external
@@ -73,7 +74,7 @@ contract PaymentVault is SafeOwn {
 
 		require(_token.balanceOf(address(this)) >= _amount, "Insufficient funds");
 
-		_token.transfer(msg.sender, _amount);
+		_token.safeTransfer(msg.sender, _amount);
 
 		emit WithdrawCompleted(address(_token), msg.sender, _amount);
 	}

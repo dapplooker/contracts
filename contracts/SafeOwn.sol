@@ -1,4 +1,4 @@
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 /**
 * @dev Contract defines way for 2-setp access control for the owner of contract.
