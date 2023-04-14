@@ -87,20 +87,36 @@ class PaymentWrapper {
         return balanceOfAccount;
     }
 
+    private async _checkProposedOwnerUpdate(): Promise<string> {
+        const oThis = this;
+        let proposedOwnerOfAccount: string = "";
+        let tokenInstance = new this.web3.eth.Contract(contractABI.abi as any, oThis.paymentContract);
+        tokenInstance.methods.pendingOwner()
+            .call(function (err: any, res: any) {
+                if (err) {
+                    console.log("An error occurred", err)
+                    return 0;
+                }
+                console.log("The proposed owner is: ", res);
+                proposedOwnerOfAccount = res;
+            })
+        return proposedOwnerOfAccount;
+    }
+
     private async _checkOwnerUpdate(): Promise<string> {
         const oThis = this;
-        let balanceOfAccount: string = "";
+        let ownerOfAccount: string = "";
         let tokenInstance = new this.web3.eth.Contract(contractABI.abi as any, oThis.paymentContract);
-        tokenInstance.methods.owner()
+        tokenInstance.methods.Owner()
             .call(function (err: any, res: any) {
                 if (err) {
                     console.log("An error occurred", err)
                     return 0;
                 }
                 console.log("The owner is: ", res);
-                balanceOfAccount = res;
+                ownerOfAccount = res;
             })
-        return balanceOfAccount;
+        return ownerOfAccount;
     }
 
     public async approveFunds(amount: bigint) {
@@ -125,9 +141,10 @@ class PaymentWrapper {
         let balanceOfAccountBefore = await oThis._checkTokenBalance(oThis.paymentContract);
         let depositCallEncoded = this.paymentInstance.methods.deposit(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.userPrivateKey, oThis.paymentContract, "DEPOSIT");
-        await this.waitForTransactionStatus(txHash, "DEPOSIT");
+        const txReceiptTopics = await this.waitForTransactionStatus(txHash, "DEPOSIT");
 
         await sleep(3000);
+        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.userWalletAddress, amount, "DEPOSIT");
         let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.paymentContract);
         let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
         assert(diffNumber.isEqualTo(amount.toString()), `Total balance ${balanceOfAccountAfter} is not as expected`);
@@ -139,34 +156,34 @@ class PaymentWrapper {
         let balanceOfAccountBefore = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
         let depositCallEncoded = this.paymentInstance.methods.withdraw(oThis.tokenContractAddress, amount).encodeABI();
         const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "WITHDRAW");
-        await this.waitForTransactionStatus(txHash, "WITHDRAW");
+        const txReceiptTopics = await this.waitForTransactionStatus(txHash, "WITHDRAW");
 
         await sleep(3000);
+        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.deployerWalletAddress, amount,"WITHDRAW");
         let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
         let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
         assert(diffNumber.isEqualTo(amount.toString()), `Total balance of owner is not as expected`);
     }
 
-    public async transferOwnership(newOwnerAddress: string) {
+    public async proposeOwnership(newOwnerAddress: string, privateKey: string) {
+        const oThis = this;
+        console.log("\n ======================= Propose ownership =======================");
+        let depositCallEncoded = this.paymentInstance.methods.proposeOwnership(newOwnerAddress).encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, privateKey, oThis.paymentContract, "PROPOSE_OWNERSHIP");
+        await this.waitForTransactionStatus(txHash, "TRANSFER_OWNERSHIP");
+        let updatedOwner = await oThis._checkProposedOwnerUpdate();
+        assert(updatedOwner != newOwnerAddress, `Ownership not transferred as expected.`);
+    }
+
+    public async acceptOwnership(newOwnerAddress: string, privateKey: string) {
         const oThis = this;
         console.log("\n ======================= Starting transfer ownership funds transaction =======================");
-        let depositCallEncoded = this.paymentInstance.methods.transferOwnership(newOwnerAddress).encodeABI();
-        const txHash = await this.sendTransaction(depositCallEncoded, oThis.deployerPrivateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
+        let depositCallEncoded = this.paymentInstance.methods.acceptOwnership().encodeABI();
+        const txHash = await this.sendTransaction(depositCallEncoded, privateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
         await this.waitForTransactionStatus(txHash, "TRANSFER_OWNERSHIP");
         let updatedOwner = await oThis._checkOwnerUpdate();
         assert(updatedOwner != newOwnerAddress, `Ownership not transferred as expected.`);
     }
-
-    public async revertOwnership() {
-        const oThis = this;
-        console.log("\n ======================= Starting transfer ownership funds transaction =======================");
-        let depositCallEncoded = this.paymentInstance.methods.transferOwnership(oThis.deployerWalletAddress).encodeABI();
-        const txHash = await this.sendTransaction(depositCallEncoded, oThis.newWalletPrivateKey, oThis.paymentContract, "TRANSFER_OWNERSHIP");
-        await this.waitForTransactionStatus(txHash, "TRANSFER_OWNERSHIP");
-        let updatedOwner = await oThis._checkOwnerUpdate();
-        assert(updatedOwner !== oThis.deployerWalletAddress, `Ownership not reverted as expected`);
-    }
-
 
     private async sendTransaction(txDataEncoded: any, privateKey: string, toContract: string, operation: string) {
         let block = await this.web3.eth.getBlock('latest');
@@ -182,8 +199,14 @@ class PaymentWrapper {
             const signedTx = await this.web3.eth.accounts.signTransaction(transactionParameters, privateKey);
             console.log(`${operation}: Signed transaction details: ${JSON.stringify(signedTx)}`);
             this.web3.eth.sendSignedTransaction(signedTx.rawTransaction,
-                function (error: Error, hash: string){console.log(`Callback function error check: ${error}`)})
-                .on( 'error' , function( error: any ) { console.error( error.message ); });
+                function (error: Error, hash: string)
+                {
+                    console.log(`Callback function error check: ${error}`);
+                    return "";
+                }).on( 'error' , function( error: any ) {
+                    console.error( error.message );
+                    return "";
+                });
             return signedTx.transactionHash;
         } catch (error) {
             console.log(`${operation} Error: ${error}`);
@@ -192,13 +215,22 @@ class PaymentWrapper {
 
 
     private async waitForTransactionStatus(txHash: string, operation: string) {
+        if (txHash === ""){
+            console.log(`Error in transaction`);
+            process.exit(1);
+        }
         while (true) {
             const txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
-            if (txReceipt !== null) {
+            if (txReceipt !== null && txReceipt.status) {
                 console.log(`${operation} receipt: `, JSON.stringify(txReceipt));
-                let receiptLogData = txReceipt.logs[0].data;
-                console.log(`Data value ${this.decodeData(receiptLogData)}`)
-                break;
+                const index = ["DEPOSIT", "WITHDRAW"].includes(operation) ? 1 : 0;
+                let receiptLogData = txReceipt.logs[index].data;
+                console.log(`Data value ${this.decodeData(receiptLogData)}`);
+                console.log(`${operation} receipt topic: `, JSON.stringify(txReceipt.logs[index].topics));
+                return {
+                    topics: txReceipt.logs[index].topics,
+                    data: txReceipt.logs[index].data
+                };
             } else {
                 console.log(`Waiting for ${operation} transaction receipt`);
                 await sleep(1000);
@@ -206,32 +238,68 @@ class PaymentWrapper {
         }
     }
 
+    private verifyEventParams(logDetails: any, firstEventParams: string, secondEventParams: string, valueData:bigint, operation: string){
+        assert(this.web3.utils.hexToNumberString(logDetails.topics[1]) === this.web3.utils.hexToNumberString(firstEventParams), `${operation} first params doesn't match.`);
+        assert(this.web3.utils.hexToNumberString(logDetails.topics[2]) === this.web3.utils.hexToNumberString(secondEventParams), `${operation} second params doesn't match..`);
+        assert(this.web3.utils.hexToNumberString(logDetails.data) === valueData.toString(), `${operation} data doesn't match..`);
+    }
+
     private decodeData(receiptLogData: string){
-        const reason = this.web3.utils.hexToNumberString(receiptLogData);
-        return reason;
+        const stringValue = this.web3.utils.hexToNumberString(receiptLogData);
+        console.log(`Hex ${receiptLogData} \nString ${stringValue}`);
+        return stringValue;
     }
 }
 
 async function doTransactions(networkName: string, tokenName: string) {
     const paymentVault = new PaymentWrapper(networkName, tokenName);
+    // Fund transfer test case
+    await testFundTransfer(paymentVault, networkName, tokenName);
+
+    // Ownership test case
+    await transferOwnershipTest(paymentVault, networkName, tokenName);
+
+    // Revert ownership test case
+    await revertOwnershipTest(paymentVault, networkName, tokenName);
+}
+
+async function testFundTransfer(paymentVault: PaymentWrapper, networkName: string, tokenName: string) {
     await paymentVault.approveFunds(Constant.transferAmountInGWEI).then(() =>
-        console.log(`Approve transaction done. Approved funds to ${Constant.contractAddress[networkName][tokenName]}`)
+        console.log(`Approve transaction done. Approved funds to ${Constant.contractAddress[networkName]["paymentVault"]}`)
     );
     await sleep(1000);
     await paymentVault.depositFunds(Constant.transferAmountInGWEI).then(() =>
-        console.log(`Deposit transaction done. Deposited funds to ${Constant.contractAddress[networkName][tokenName]}`)
+        console.log(`Deposit transaction done. Deposited funds to ${Constant.contractAddress[networkName]["paymentVault"]}`)
     );
     await sleep(1000);
     await paymentVault.withdrawFunds(Constant.transferAmountInGWEI).then(() =>
         console.log(`Withdraw transaction done. Withdrawn funds to ${Constant.contractAddress[networkName]["deployerAddress"]}`)
     );
+}
+
+async function transferOwnershipTest(paymentVault: PaymentWrapper, networkName: string, tokenName: string) {
     await sleep(1000);
-    await paymentVault.transferOwnership(process.env.NEW_OWNER_WALLET_ADDRESS!).then(() =>
+    await paymentVault.proposeOwnership(process.env.NEW_OWNER_WALLET_ADDRESS!,
+        Constant.contractAddress[networkName]["deployerPrivateKey"]).then(() =>
         console.log(`Transfer ownership transaction done.`)
     );
+    await sleep(1000);
+    await paymentVault.acceptOwnership(process.env.NEW_OWNER_WALLET_ADDRESS!,
+        Constant.contractAddress[networkName]["newWalletPrivateKey"]).then(() =>
+        console.log(`Transfer ownership transaction done.`)
+    );
+}
+
+async function revertOwnershipTest(paymentVault: PaymentWrapper, networkName: string, tokenName: string) {
     await sleep(3000);
-    await paymentVault.revertOwnership().then(() =>
-        console.log(`Reverted ownership transaction done.`)
+    await paymentVault.proposeOwnership(process.env.DEPLOYER_WALLET_ADDRESS!,
+        Constant.contractAddress[networkName]["newWalletPrivateKey"]).then(() =>
+        console.log(`Transfer ownership transaction done.`)
+    );
+    await sleep(1000);
+    await paymentVault.acceptOwnership(process.env.DEPLOYER_WALLET_ADDRESS!,
+        Constant.contractAddress[networkName]["deployerPrivateKey"]).then(() =>
+        console.log(`Transfer ownership transaction done.`)
     );
 }
 

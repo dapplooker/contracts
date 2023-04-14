@@ -1,9 +1,7 @@
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./SafeOwn.sol";
 
 
 /**
@@ -14,30 +12,29 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
  *		to the PaymentVault contract, which later can be withdrawn using
  *		PaymentVault.withdraw() function to owners wallet.
  */
-contract PaymentVault is Initializable, OwnableUpgradeable {
-
-	using SafeERC20Upgradeable for IERC20Upgradeable;
-
+contract PaymentVault is SafeOwn {
+	using SafeERC20 for IERC20;
 
 	/* Events */
 
 	event DepositCompleted(
-        address sender,
-        uint256 amount)
-    ;
+		address indexed token,
+		address indexed sender,
+		uint256 amount)
+	;
 
 	event WithdrawCompleted(
-        address token,
-        address beneficiary,
-        uint256 amount
-    );
+		address indexed token,
+		address indexed beneficiary,
+		uint256 amount
+	);
 
-    /* Special Functions */
-	function initialize() public initializer {
-		__Ownable_init();
+	/* Constructor */
+	constructor() SafeOwn() {
+
 	}
 
-    /* External Functions */
+	/* External Functions */
 
 	/**
  	 * @dev Deposit `amount` of `erc20` tokens from this user's wallet to `contract`.
@@ -46,11 +43,11 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
      * @param _amount of tokens to deposit.
      */
 	function deposit(
-		IERC20Upgradeable _token,
+		IERC20 _token,
 		uint256 _amount
 	)
-        external
-    {
+	external
+	{
 
 		uint256 balance = _token.balanceOf(address(msg.sender));
 
@@ -58,7 +55,7 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
 
 		_token.safeTransferFrom(msg.sender, address(this), _amount);
 
-		emit DepositCompleted(msg.sender, _amount);
+		emit DepositCompleted(address(_token), msg.sender, _amount);
 	}
 
 	/**
@@ -68,12 +65,12 @@ contract PaymentVault is Initializable, OwnableUpgradeable {
      * @param _amount of tokens to withdrawn.
      */
 	function withdraw(
-		IERC20Upgradeable _token,
+		IERC20 _token,
 		uint256 _amount
 	)
-        external
-        onlyOwner
-    {
+	external
+	onlyOwner
+	{
 		require(_amount > 0, "Withdraw amount must be greater than 0");
 
 		require(_token.balanceOf(address(this)) >= _amount, "Insufficient funds");
