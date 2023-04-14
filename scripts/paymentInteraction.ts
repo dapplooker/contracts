@@ -53,43 +53,7 @@ class PaymentWrapper {
         this.web3 = new Web3(this.networkRPCURL);
         this.web3.eth.accounts.wallet.add(this.userPrivateKey);
         this.paymentInstance = new this.web3.eth.Contract(contractABI.abi as any, this.paymentContract);
-        // console.log(`${this.web3.utils.keccak256("0xb12fd2d441f192e2067627dbde7833e9083f6ca2")}`);
-        // this._checkEvent("0x0000000000000000000000000000000000000000000000001bc16d674ec80000", [
-        //     "0x1bad216835d734e9d5e04912eb29a5b47ac9479d0c6e1a622f4e1b4d983a196c",
-        //     "0x000000000000000000000000326c977e6efc84e512bb9c30f76e30c160ed06fb",
-        //     "0x000000000000000000000000b12fd2d441f192e2067627dbde7833e9083f6ca2"
-        // ])
-        // console.log(`Vikash::::: ${this.web3.utils.hexToNumberString("0x326c977e6efc84e512bb9c30f76e30c160ed06fb")}`)
-        // console.log(`Vikash::::: ${hex.DecodeString("0x000000000000000000000000326c977e6efc84e512bb9c30f76e30c160ed06fb")}`)
-        // process.exit(0);
     }
-
-    // private _checkEvent(data:string, topics: string[]){
-    //     console.log(`Vikash:::Welcome`)
-    //     let result = this.web3.eth.abi.decodeLog( [
-    //             {
-    //                 "indexed": true,
-    //                 "internalType": "address",
-    //                 "name": "token",
-    //                 "type": "address"
-    //             },
-    //             {
-    //                 "indexed": true,
-    //                 "internalType": "address",
-    //                 "name": "sender",
-    //                 "type": "address"
-    //             },
-    //             {
-    //                 "indexed": false,
-    //                 "internalType": "uint256",
-    //                 "name": "amount",
-    //                 "type": "uint256"
-    //             }
-    //         ],
-    //         data,
-    //         topics[1]);
-    //     console.log(`Vikash::: ${JSON.stringify(result)}`)
-    // }
 
     private async _checkAllowance(ownerAddress: string, spenderAddress: string): Promise<bigint> {
         const oThis = this;
@@ -180,7 +144,7 @@ class PaymentWrapper {
         const txReceiptTopics = await this.waitForTransactionStatus(txHash, "DEPOSIT");
 
         await sleep(3000);
-        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.userWalletAddress, "DEPOSIT");
+        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.userWalletAddress, amount, "DEPOSIT");
         let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.paymentContract);
         let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
         assert(diffNumber.isEqualTo(amount.toString()), `Total balance ${balanceOfAccountAfter} is not as expected`);
@@ -195,7 +159,7 @@ class PaymentWrapper {
         const txReceiptTopics = await this.waitForTransactionStatus(txHash, "WITHDRAW");
 
         await sleep(3000);
-        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.deployerWalletAddress, "WITHDRAW");
+        this.verifyEventParams(txReceiptTopics, oThis.tokenContractAddress, oThis.deployerWalletAddress, amount,"WITHDRAW");
         let balanceOfAccountAfter = await oThis._checkTokenBalance(oThis.deployerWalletAddress);
         let diffNumber = new BigNumber(balanceOfAccountAfter.toString()).minus(balanceOfAccountBefore.toString());
         assert(diffNumber.isEqualTo(amount.toString()), `Total balance of owner is not as expected`);
@@ -257,12 +221,16 @@ class PaymentWrapper {
         }
         while (true) {
             const txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
-            if (txReceipt !== null) {
+            if (txReceipt !== null && txReceipt.status) {
+                console.log(`${operation} receipt: `, JSON.stringify(txReceipt));
                 const index = ["DEPOSIT", "WITHDRAW"].includes(operation) ? 1 : 0;
                 let receiptLogData = txReceipt.logs[index].data;
                 console.log(`Data value ${this.decodeData(receiptLogData)}`);
                 console.log(`${operation} receipt topic: `, JSON.stringify(txReceipt.logs[index].topics));
-                return txReceipt.logs[index].topics;
+                return {
+                    topics: txReceipt.logs[index].topics,
+                    data: txReceipt.logs[index].data
+                };
             } else {
                 console.log(`Waiting for ${operation} transaction receipt`);
                 await sleep(1000);
@@ -270,9 +238,10 @@ class PaymentWrapper {
         }
     }
 
-    private verifyEventParams(logDetails: string[], firstEventParams: string, secondEventParams: string, operation: string){
-        assert(this.web3.utils.hexToNumberString(logDetails[1]) === this.web3.utils.hexToNumberString(firstEventParams), `${operation} first params doesn't match.`);
-        assert(this.web3.utils.hexToNumberString(logDetails[2]) === this.web3.utils.hexToNumberString(secondEventParams), `${operation} second params doesn't match..`);
+    private verifyEventParams(logDetails: any, firstEventParams: string, secondEventParams: string, valueData:bigint, operation: string){
+        assert(this.web3.utils.hexToNumberString(logDetails.topics[1]) === this.web3.utils.hexToNumberString(firstEventParams), `${operation} first params doesn't match.`);
+        assert(this.web3.utils.hexToNumberString(logDetails.topics[2]) === this.web3.utils.hexToNumberString(secondEventParams), `${operation} second params doesn't match..`);
+        assert(this.web3.utils.hexToNumberString(logDetails.data) === valueData.toString(), `${operation} data doesn't match..`);
     }
 
     private decodeData(receiptLogData: string){
