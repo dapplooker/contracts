@@ -39,6 +39,8 @@ class PaymentWrapper {
 
     private newWalletPrivateKey: string;
 
+    private networkName: string;
+
 
     constructor(networkName: string, tokenName: string) {
         this.tokenContractAddress = Constant.contractAddress[networkName][tokenName];
@@ -49,6 +51,7 @@ class PaymentWrapper {
         this.deployerWalletAddress = Constant.contractAddress[networkName]["deployerAddress"];
         this.deployerPrivateKey = Constant.contractAddress[networkName]["deployerPrivateKey"];
         this.newWalletPrivateKey = Constant.contractAddress[networkName]["newWalletPrivateKey"];
+        this.networkName = networkName;
 
         this.web3 = new Web3(this.networkRPCURL);
         this.web3.eth.accounts.wallet.add(this.userPrivateKey);
@@ -187,10 +190,12 @@ class PaymentWrapper {
 
     private async sendTransaction(txDataEncoded: any, privateKey: string, toContract: string, operation: string) {
         let block = await this.web3.eth.getBlock('latest');
-        let gasLimit = Math.round(block.gasLimit / block.transactions.length);
+        const gasLimit = Math.round(block.gasUsed / block.transactions.length);
+        const gasPrice = await this.web3.eth.getGasPrice();
 
         const transactionParameters = {
-            gas: gasLimit,
+            gas: this.networkName === 'goerliArbitrum' ? 100000: gasLimit,
+            gasPrice: gasPrice,
             to: toContract,
             data: txDataEncoded
         };
@@ -219,11 +224,18 @@ class PaymentWrapper {
             console.log(`Error in transaction`);
             process.exit(1);
         }
-        while (true) {
+        let breakCount = 20;
+        while (breakCount) {
             const txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
             if (txReceipt !== null && txReceipt.status) {
+                if (txReceipt.logs.length === 0){
+                    return;
+                }
                 console.log(`${operation} receipt: `, JSON.stringify(txReceipt));
-                const index = ["DEPOSIT", "WITHDRAW"].includes(operation) ? 1 : 0;
+                let index = ["DEPOSIT", "WITHDRAW"].includes(operation) ? 2 : 0;
+                if (operation === "WITHDRAW"){
+                    index = 1;
+                }
                 let receiptLogData = txReceipt.logs[index].data;
                 console.log(`Data value ${this.decodeData(receiptLogData)}`);
                 console.log(`${operation} receipt topic: `, JSON.stringify(txReceipt.logs[index].topics));
@@ -233,8 +245,10 @@ class PaymentWrapper {
                 };
             } else {
                 console.log(`Waiting for ${operation} transaction receipt`);
-                await sleep(1000);
+                await sleep(2000);
             }
+            breakCount--;
+            console.log(`Break after ${breakCount} iterations`)
         }
     }
 
