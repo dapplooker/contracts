@@ -194,7 +194,7 @@ class PaymentWrapper {
         const gasPrice = await this.web3.eth.getGasPrice();
 
         const transactionParameters = {
-            gas: this.networkName === 'goerliArbitrum' ? 100000: gasLimit,
+            gas: this.networkName === 'goerliArbitrum' ? Constant.defaultGasLimit: gasLimit,
             gasPrice: gasPrice,
             to: toContract,
             data: txDataEncoded
