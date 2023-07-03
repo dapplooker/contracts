@@ -3,6 +3,9 @@
 ## ERC20 Contract
 https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20
 
+### Audit Report:
+[QuillAudits Smart Contract Audit Report](docs/DappLookerSmartContractAuditReport-QuillAudits.pdf)
+
 ### Deployed contracts:
 [ArbitrumOne](https://arbiscan.io/address/0x0e13a51a1c6a74083b1ce32d62368abb2c8f403e)
 [Polygon](https://polygonscan.com/address/0xd2b11b3f41d700968183966da575895ce0d28fa8)
